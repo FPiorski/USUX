@@ -1,0 +1,70 @@
+1.
+Po przejściu do katalogu zawierającego rozpakowaną zawartość archiwum przyklad2.tar.gz i zapoznaniu się z treścią obecnych tam plików wykonałem zadane czynności przy użyciu następujących komend:
+    mkdir src
+    mkdir inc 
+    mv *.h inc
+    mv *.c src
+co dało mi następującą strukturę drzewa katalogów:
+    .
+    ├── inc
+    │   └── rkw.h
+    └── src
+        ├── delta.c
+        ├── pierw.c
+        └── rkw.c
+Nie zmieniając dalej bieżącego katalogu wywołałem polecenie
+    gcc src/*.c -Iinc -lm -o prog
+co spowodowało wydrukowanie warningów związanych z użyciem funkcji exit() bez załączenia plika nagłówkowego stdlib.h oraz utworzenie programu.
+Aby przekompilować kod odpowiedinio bez oraz z optymalizacją (O0 to wyłączona optymalizacja, O3 to włączone najwięcej opcji optymalizacji) użyłem komend
+    gcc -O0 src/*.c -Iinc -lm -o prog_O0
+    gcc -O3 src/*.c -Iinc -lm -o prog_O3
+Porównanie rozmiarów (przy użyciu ls -l) wyjawiło, że na moim systemie (gcc (Debian 8.3.0-6) 8.3.0) zarówno -O3 jak i -O0 (a także -Os) dały rozmiar pliku wynikowego równy 16936.
+Zadefiniowanie lub nie makra ZESPOLONE (tak jak widać w plikach pierw.c i rkw.c) wykonałem poprzez flagi gcc odpowiednio -DZESPOLONE oraz -UZESPOLONE:
+    gcc -DZESPOLONE src/*.c -Iinc -lm -o prog_zespolone
+    gcc -UZESPOLONE src/*.c -Iinc -lm -o prog_rzeczywiste
+Ponadto dodałem odpowienie pliki nagłówkowe do odpowiednich plików programu tak, aby ustąpiły errory i warningi.
+2.
+W celu utworzenia biblioteki najpierw utworzyłem pliki obiektowe
+    gcc -c src/delta.c src/pierw.c
+Następnie utworzyłem bibliotekę statyczną przy użyciu programu ar
+    ar -rv libusux.a delta.o pierw.o
+A potem
+    gcc src/rkw.c libusux.a -Iinc -lm -o prog_libusux_a
+3.
+Najpierw utworzyłem pliki obiektowe podobnie jak wcześniej, ale z flagą pic (position independent code), potem utworzyłem współdzieloną bibliotekę, znów przy użyciu gcc
+    gcc -c -fpic src/delta.c src/pierw.c
+    gcc -shared *.o -o libusux.so
+Teraz potrzebuję zalinkować libusux (-lusux) oraz podać do gcc ścieżkę do tej biblioteki (-L.)
+    gcc src/rkw.c -L. -Iinc -lm -lusux -o prog_libusux_so
+Oraz przed uruchomieniem dodać do ścieżki wyszukiwania bibliotek współdzielonych bieżący katalog
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
+4.
+Wyświetlenie tablicy symboli:
+    nm prog
+    nm libusux.a
+Usunięcie tablicy symboli:
+    strip prog
+    strip libusux.a
+Wykonując ponownie
+    gcc src/rkw.c libusux.a -Iinc -lm -o prog_libusux_a
+Dostałem błąd
+    /usr/bin/ld: libusux.a: error adding symbols: archive has no index; run ranlib to add one
+Bez tablicy symboli kompilacja nie była możliwa.
+5.
+a)  flaga -g przy wywoływaniu gcc
+    gcc -g src/*.c -Iinc -lm -o prog
+b)
+    gdb prog
+    >>> set listsize 100
+    >>> list
+    >>> b 6
+    >>> b 26
+c)
+    >>> set args 1 0 -100
+    >>> show args
+d) przed uruchomieniem gdb narzekał na brak zmiennej w bierzącym kontekście, więc dopiero po uruchomieniu programu wpisałem
+    >>> watch x1
+e)
+    >>> run
+f)
+    set variable x1 = 1000

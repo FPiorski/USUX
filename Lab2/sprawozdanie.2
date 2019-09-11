@@ -1,0 +1,17 @@
+Ad. 2.
+
+komenda |    cp    |    mv    |    rm 
+-----------------------------------------   
+katalog |   r-x    |   -wx    |   -wx    
+-----------------------------------------
+pliki   |   r--    |   ---    |   ---    
+
+Do usunięcia całej gałęzi drzewa katalogów trzeba mieć co najmniej -wx do katalogu oraz -w- do katalogu nadrzędnego
+
+Ad. 3.
+Można je rozróżnić przy użyciu ls -li, zywkła kopia będzie miała inny nr inode niż oryginał, link taki sam, a symlink będzie pokazany ze strzałką
+Kopia orazy symlink zużyły po jednym inode, zwykły link zużył zero.
+Można utworzyć symlink do nieinstniejącego pliku, ale nie zwykły link.
+
+Ad. 4.
+find . -type d -group grupa -perm /g+r -exec chmod 700 {} +

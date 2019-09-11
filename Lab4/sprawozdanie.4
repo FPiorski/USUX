@@ -1,0 +1,35 @@
+Ad. 1. dodałem do ~/.zshrc następujące linie:
+  a) export PATH="$HOME/skrypt:$PATH" lub export PATH="$PATH:$HOME/skrypt"
+  W zależności od tego czy wybrałem opcję pierwszą czy drugą katalog ~/skrypt był przeszukiwany odpowiednio jako pierwszy lub jako ostatni (zakładając, że pod drodze żaden plik konfiguracyjny nie zmienił dodatkowo $PATH, co w moim przypadku okazało się poprawnym założeniem)
+  b) alias lp="ps -lU $USER"
+
+Ad. 2. Zmienna środowiskowa jest dostępna zarówno dla procesu oraz dla dzieci tego procesu, zmienna lokalna powłoki jest dostępna tylko i wyłącznie w obrębie powłoki w której została zdefiniowana
+
+Ad. 3. ls -d .!(|.)
+
+Ad. 4. Przykłady:
+
+echo "katalog użytkownika to $HOME" - zmienna $HOME zostanie rozwinięta
+echo 'katalog użytkownika to $HOME' - zmienna $HOME nie zostanie rozwinięta
+kill `pgrep bash | tail -n1` - PID procesu w którego nazwie występuje bash oraz którego pid jest największy zostanie przekazany jako argument wywołania kill
+echo \~ - tylda nie zostanie rozwinięta
+
+
+      |         $          |        ` `         |         *          |
+----------------------------------------------------------------------------
+      |   traktowane jak   |                    | "*" traktowane jak | 
+  " " |        znak        |   interpretowane   |        znak        | 
+      |     specjalny      |                    |       zwykły       | 
+----------------------------------------------------------------------------
+      |   traktowane jak   |        nie         | "*" traktowane jak | 
+  ' ' |        znak        |   interpretowane   |        znak        | 
+      |       zwykły       |                    |       zwykły       | 
+----------------------------------------------------------------------------
+      |   traktowane jak   | jeśli wewnętrzne ` |                    | 
+  ` ` |        znak        |  są poprzedzone \  | "*" traktowane jak | 
+      |     specjalny      | to zagnieżdżanie   |      wildcard      |
+      |                    |      działa        |                    | 
+----------------------------------------------------------------------------
+      | \$ traktowane jak  | \` traktowane jak  | \* traktowane jak  | 
+   \  |        znak        |        znak        |        znak        | 
+      |       zwykły       |       zwykły       |       zwykły       | 

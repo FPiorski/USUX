@@ -1,0 +1,1 @@
+# Warning: this C code was not written by me and is only included for educational purposes. As such it is not the subject of the license under which the rest of this repository is distributed.

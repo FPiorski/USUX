@@ -1,0 +1,56 @@
+Ad. 1. ps -lu fpiorski aby wyświetlić wszytkie procesy użytkownika z dużą ilością parametrów (bez -l ps nie wyświetli wymienionych w poleceniu atrybutów priorytetu i wartości nice)
+F S   UID   PID  PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+5 S 19348  2828  2807  0  80   0 - 23855 ?      ?        00:00:00 sshd
+0 S 19348  2829  2828  0  80   0 -  5490 -      pts/7    00:00:00 bash
+5 S 19348  9632  9378  0  80   0 - 23855 ?      ?        00:00:00 sshd
+0 S 19348  9633  9632  0  80   0 -  5490 -      pts/3    00:00:00 bash
+0 R 19348  9859  9633  0  80   0 -  3400 -      pts/3    00:00:00 ps
+5 S 19348 30457 30431  0  80   0 - 23855 ?      ?        00:00:00 sshd
+0 S 19348 30459 30457  0  80   0 -  5490 -      pts/0    00:00:00 bash
+opis atrybutów:
+F - flagi procesu
+S - stan procesu
+UID - user ID
+PID - process ID
+PPID - parent process ID
+C - procent użycia procesora przez proces (liczba całkowita)
+PRI - priorytet procesu (efektywny priorytet używany przez jądro)
+NI - niceness procesu (modifier priorytetu procesów z user-space)
+ADDR - adres procesu
+SZ - zużycie pamięci
+WCHAN - nazwa funkcji jądra w której proces obecnie jest uśpiony
+TTY - terminal do którego proces jest podpięty
+CMD - nazwa procesu plus argumenty wywołania
+
+Ad. 2. "Zidentyfikować własne procesy i narysować drzewo dziedziczenia od procesu o identyfikatorze PID=1 do tych procesów" - żeby zrobić to poprawnie trzebaby wypisać listę procesów użytkownika wraz z ich ppid, potem listę tamtych nadrzędnych wraz z ich ppid, rekurencyjnie aż do init po czym tą listę zamienić na drzewo procesów, czego nie udało mi się zrobić skryptem w skończonym czasie laboratorium. Mógłbym ręcznie to zrobić, ale to chyba nie o to chodzi.
+
+Ad. 3. Zarówno yes działający w tle jak i w pierwszym planie zatrzymał się po otrzymaniu SIGKILL
+Po wywołaniu
+trap '' SIGINT
+oraz
+yes > /dev/null
+wysłanie z innego okna
+pkill --signal SIGINT yes
+nie poskutkowało zakończeniem działania yes, lecz taka sama sztuczka nie udała się z SIGKILL. 
+Dodanie jakiejś akcji trapem poskutkowało zakończeniem procesu przed wywołaniem akcji
+
+Ad. 4. wywołałem po kolei 
+sleep 100 &
+sleep 101 &
+sleep 102 &
+sleep 103 &
+sleep 104 &
+sleep 105 &
+fg spowodowało przejście do sleep 105, ctrl+c zakończenie tego procesu, kolejne fg spowodowało przejście do sleep 104, ctrl+z spowodowało wyjście do shella, jobs pokazało, że sleep 104 jest zatrzymany a reszta dalej działa, bg odpauzowało sleep 104
+
+Ad. 5. Proces z innym nice uruchamia się komendą nice, np.
+nice -10 sleep 2000 &
+po czym odpalenie
+ps -lu fpiorski | grep "sleep" | awk {'print $7'}
+dało wynik 90, czyli priorytet zodstał podwyższony
+Teraz
+renice 15 -p $(pgrep -u fpiorski sleep)
+i ponowne
+ps -lu fpiorski | grep "sleep" | awk {'print $7'}
+dało wynik 95, czyli priorytet został jeszcze bardziej podwyższony (przy czym należy pamiętać, że priorytet jest odwrócony - bliżej 0 są procesy wazniejsze, dlatego dobrana została nazwa nice - im mniejsze tym mniej miłe są procesy - bardziej pchają się po resources)
+Nie udało mi się ustawić przez renice parametru nice na 5 - uzyskałem komunikat permission denied, lecz wywołanie nowego procesu z nice=5 nie było problemem.
